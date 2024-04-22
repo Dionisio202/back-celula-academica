@@ -1,0 +1,1 @@
+path('login/', views.Login.as_view())
