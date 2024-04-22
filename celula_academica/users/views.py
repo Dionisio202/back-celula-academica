@@ -1,6 +1,14 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from supabase_py import create_client
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+supabase_url = os.getenv('SUPABASE_URL')
+supabase_key = os.getenv('SUPABASE_KEY')
+def get_supabase_client():
+    return create_client(supabase_url, supabase_key)
 
 class Register(APIView):
     def post(self, request):
@@ -14,9 +22,7 @@ class Register(APIView):
             return Response({'error': 'Debes proporcionar un correo electrónico y una contraseña'}, status=400)
 
         # Configurar el cliente Supabase
-        supabase_url = 'https://esdqjitrbfjfnpkmizyx.supabase.co'
-        supabase_key = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVzZHFqaXRyYmZqZm5wa21penl4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTMyMjEwODYsImV4cCI6MjAyODc5NzA4Nn0.LxIA5PdtDASqPQHCWPFz8zTzVO83-oEPyTUJp_qUaIs'
-        client = create_client(supabase_url, supabase_key)
+        client = get_supabase_client()
 
         auth_response = client.auth.sign_up(email, password)
         
@@ -37,7 +43,6 @@ class Register(APIView):
             return Response({'error': str(e)}, status=500)
 
 
-
 class Login(APIView):
     def post(self, request):
         try:
@@ -48,14 +53,9 @@ class Login(APIView):
             if not email or not password:
                 return Response({'error': 'Debes proporcionar un correo electrónico y una contraseña'}, status=400)
 
-            supabase_url = 'https://esdqjitrbfjfnpkmizyx.supabase.co'
-            supabase_key = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVzZHFqaXRyYmZqZm5wa21penl4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTMyMjEwODYsImV4cCI6MjAyODc5NzA4Nn0.LxIA5PdtDASqPQHCWPFz8zTzVO83-oEPyTUJp_qUaIs'
-            client = create_client(supabase_url, supabase_key)
-
-  
+            # Configurar el cliente Supabase
+            client = get_supabase_client()
             auth_response = client.auth.sign_in(email, password)
-          
-        
             if 'status_code' in auth_response and auth_response['status_code'] == 200:
                 # Autenticación exitosa
                   return Response({'token': auth_response['access_token']})
