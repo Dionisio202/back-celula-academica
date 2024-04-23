@@ -36,7 +36,7 @@ class Register(APIView):
             profile_table = client.table('profile')
             profile_response = profile_table.insert(profile_data).execute()
             # Autenticación exitosa
-            return Response({'Registrado con exito':auth_response})
+            return Response({'Registrado con exito'})
         elif 'status_code' in auth_response and auth_response['status_code'] == 429:
             return Response({'Limite de registros excedidos'}, status=429)
      except Exception as e:
