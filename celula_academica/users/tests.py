@@ -58,32 +58,32 @@ class LoginTestCase(TestCase):
         self.assertIn('error', response.data)
         self.assertEqual(response.data['error'], 'Debes proporcionar un correo electrónico y una contraseña')
 
-
+###test Register 
 class RegisterTestCase(TestCase):
     def setUp(self):
         self.factory = APIRequestFactory()
 
     def test_register_success(self):
-         url = '/api/register/'
-         data = {
-             'email': 'test1@example.com',
-             'password': 'securepassword',
-             'name': 'John',
-             'lastName': 'Doe'
-         }
-         request = self.factory.post(url, data)
-         view = Register.as_view()
-         response = view(request)
+          url = '/api/register/'
+          data = {
+              'email': 'solis@outlook.com',
+              'password': '123456',
+              'name': 'Edison',
+              'lastName': 'Ortiz'
+          }
+          request = self.factory.post(url, data)
+          view = Register.as_view()
+          response = view(request)
 
-         # Verifica que la respuesta tenga el código 200 (éxito)
-         self.assertEqual(response.status_code, status.HTTP_200_OK)
+          # Verifica que la respuesta tenga el código 200 (éxito)
+          self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-         self.assertIn('Registrado con éxito', response.data['message'])
+          self.assertIn('Registrado con éxito', response.data['message'])
 
     def test_register_missing_data(self):
         url = '/api/register/'
         data = {
-            'email': 'solisedison@outlook.com'
+            'email': 'solisedin@outlook.com'
         }
         request = self.factory.post(url, data)
         view = Register.as_view()
@@ -146,7 +146,7 @@ class RegisterTestCase(TestCase):
     def test_register_emailExist(self):
         url = '/api/register/'
         data = {
-            'email': 'solisedison@outlook.com',
+            'email': 'solis@outlook.com',
             'password': '123456',
             'name': 'Edison',
             'lastName': 'Ortiz'
