@@ -45,7 +45,7 @@ class LoginTestCase(TestCase):
         response = view(request)
 
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.data['error'], 'invalid_grant')
+        self.assertEqual(response.data['error'], 'Credenciales inválidas')
 
     def test_login_empty_fields(self):
         url = '/api/login/'

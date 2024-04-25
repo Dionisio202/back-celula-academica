@@ -49,20 +49,22 @@ class Register(APIView):
             return Response({'error': str(e)}, status=500)
 
 
+
+
 class Login(APIView):
     def post(self, request):
         try:
             email = request.data.get('email')
             password = request.data.get('password')
+
             if not email or not password:
                 return Response({'error': 'Debes proporcionar un correo electrónico y una contraseña'}, status=400)
 
             client = get_supabase_client()
             auth_response = client.auth.sign_in(email, password)
-
             if 'status_code' in auth_response and auth_response['status_code'] == 200:
-                  return Response({'token': auth_response['access_token']})
+                return Response({'token': auth_response['access_token']})
             else:
-                return Response({'error': auth_response.get('error', auth_response)}, status=400)
+                return Response({'error': 'Credenciales inválidas'}, status=400)
         except Exception as e:
-            return Response({'error': auth_response}, status=500)
+            return Response({'error': str(e)}, status=500)
