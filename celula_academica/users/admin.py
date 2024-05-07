@@ -1,6 +1,5 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
-from django.contrib.auth.models import Group
 from .models import CustomUser
 
 class UserAdmin(BaseUserAdmin):
@@ -9,17 +8,17 @@ class UserAdmin(BaseUserAdmin):
     list_filter = ('is_active', 'is_admin', 'categoria')
     fieldsets = (
         (None, {'fields': ('email', 'password')}),
-        ('Personal info', {'fields': ('nombre', 'apellido', 'telefono', 'cedula', 'carrera', 'semestre', 'categoria')}),
-        ('Permissions', {'fields': ('is_active', 'is_staff', 'is_superuser')}),
-        ('Important dates', {'fields': ('last_login', 'date_joined')}),
+        ('Personal info', {'fields': ('nombre', 'apellido', 'cedula', 'telefono', 'carrera', 'semestre', 'categoria')}),
+        ('Permissions', {'fields': ('is_active', 'is_staff', 'is_admin')}),
     )
-    filter_horizontal = ('custom_field',)
+    filter_horizontal = ()
     add_fieldsets = (
         (None, {
             'classes': ('wide',),
-            'fields': ('email', 'password1', 'password2'),
+            'fields': ('email', 'password1', 'password2','nombre', 'apellido', 'cedula', 'telefono', 'carrera', 'semestre', 'categoria'),
         }),
     )
     search_fields = ('email', 'nombre', 'apellido')
     ordering = ('email',)
-    admin.site.register(CustomUser)
+
+admin.site.register(CustomUser, UserAdmin)
