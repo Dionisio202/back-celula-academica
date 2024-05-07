@@ -13,7 +13,7 @@ class UserAdmin(BaseUserAdmin):
         ('Permissions', {'fields': ('is_active', 'is_staff', 'is_superuser')}),
         ('Important dates', {'fields': ('last_login', 'date_joined')}),
     )
-    filter_horizontal = ('custom_field',)
+    filter_horizontal = ()
     add_fieldsets = (
         (None, {
             'classes': ('wide',),
@@ -22,4 +22,4 @@ class UserAdmin(BaseUserAdmin):
     )
     search_fields = ('email', 'nombre', 'apellido')
     ordering = ('email',)
-    admin.site.register(CustomUser)
+admin.site.register(CustomUser, UserAdmin)
