@@ -2,7 +2,7 @@ from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.core.validators import RegexValidator
-
+from django.contrib.auth.models import Group
 class CustomUserManager(BaseUserManager):
     def create_user(self, email,nombre, apellido, cedula, telefono, carrera, semestre, categoria, password=None):
         if not email:
@@ -41,13 +41,7 @@ class CustomUserManager(BaseUserManager):
         return user
 
 class CustomUser(AbstractBaseUser):
-    CATEGORIAS_CHOICES = [
-        ('normal', 'Normal'),
-        ('lider', 'Líder'),
-        ('colider', 'Colíder'),
-        ('secretario', 'Secretario'),
-        ('tesorero', 'Tesorero'),
-    ]
+ 
     nombre = models.CharField(max_length=50)
     apellido = models.CharField(max_length=50)
     email = models.EmailField(unique=True)  # Hace que el correo electrónico sea único
@@ -57,11 +51,11 @@ class CustomUser(AbstractBaseUser):
     semestre = models.IntegerField(
         validators=[MinValueValidator(0,"El semestre debe ser un número entre 0 y 10"), MaxValueValidator(10,"El semestre debe ser un número entre 0 y 10")]
     )
-    categoria = models.CharField(max_length=20, choices=CATEGORIAS_CHOICES, default='normal')
     is_active = models.BooleanField(default=True)
     is_admin = models.BooleanField(default=False)
     is_staff = models.BooleanField(default=False) 
-  
+    categoria = models.ForeignKey(Group, on_delete=models.SET_NULL, null=True, related_name='user', blank=True)
+
 
     objects = CustomUserManager()  # Asociar el manager con el modelo
 
