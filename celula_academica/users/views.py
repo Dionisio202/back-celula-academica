@@ -1,70 +1,61 @@
-from rest_framework.views import APIView
+from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from supabase_py import create_client
-import os
-from dotenv import load_dotenv
-from .models import Profile
-load_dotenv()
-supabase_url = os.getenv('SUPABASE_URL')
-supabase_key = os.getenv('SUPABASE_KEY')
-def get_supabase_client():
-    return create_client(supabase_url, supabase_key)
+from .serializers import UserSerializer
+from .models import CustomUser
+from rest_framework.authtoken.models import Token
+from rest_framework import status 
+from django.shortcuts import get_object_or_404
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.decorators import permission_classes , authentication_classes
+from rest_framework.authentication import TokenAuthentication
+@api_view(['POST'])
+def register(request):
+    required_fields = ['email', 'nombre', 'apellido', 'cedula', 'telefono', 'carrera', 'semestre', 'categoria', 'password']
+    for field in required_fields:
+        if field not in request.data or not request.data[field]:
+            return Response({'error': f'El campo "{field}" es requerido'}, status=status.HTTP_400_BAD_REQUEST)
+    serializer = UserSerializer(data=request.data)
+    if serializer.is_valid():
+        email = serializer.validated_data['email']
+        nombre = serializer.validated_data['nombre']
+        apellido = serializer.validated_data['apellido']
+        cedula = serializer.validated_data['cedula']
+        telefono = serializer.validated_data['telefono']
+        carrera = serializer.validated_data['carrera']
+        semestre = serializer.validated_data['semestre']
+        categoria = serializer.validated_data['categoria']
+        password = serializer.validated_data['password']
+        if CustomUser.objects.filter(email=email).exists():
+            return Response({'error': 'Este correo electrónico ya está registrado'}, status=status.HTTP_400_BAD_REQUEST)
+        if CustomUser.objects.filter(cedula=cedula).exists():
+            return Response({'error': 'Esta cedula ya esta registrada'}, status=status.HTTP_400_BAD_REQUEST)
+        user = CustomUser.objects.create_user(
+            email=email,
+            cedula=cedula,
+            telefono=telefono,
+            carrera=carrera,
+            semestre=semestre,
+            categoria=categoria,
+            password=password,
+            nombre=nombre,
+            apellido=apellido
+        )
+        token = Token.objects.create(user=user)
+        return Response({'token': token.key, 'email': email}, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-class Register(APIView):
-    def post(self, request):
-        try:
-            email = request.data.get('email')
-            password = request.data.get('password')
-            name = request.data.get('name')
-            lastName = request.data.get('lastName')
-            
-            if not email or not password:
-                return Response({'error': 'Debes proporcionar un correo electrónico y una contraseña'}, status=400)
-            if not name or not lastName:
-                return Response({'error': 'Debes proporcionar un nombre y un apellido'}, status=400)
-            if Profile.objects.filter(email=email).exists():
-                return Response({'error': 'El correo electrónico ya está registrado'}, status=400)
-            if password.__len__() < 6:
-                return Response({'error': 'La contraseña debe tener al menos 6 caracteres'}, status=400)
-            client = get_supabase_client()
-            auth_response = client.auth.sign_up(email, password)
-        
-            if 'status_code' in auth_response and auth_response['status_code'] == 200:
-                user_id = auth_response.get('id')
-                new_profile = Profile.objects.create(
-                    user_id=user_id,
-                    name=name,
-                    last_name=lastName,
-                    email=email
-                )
-                new_profile.save()
-                return Response({'Registrado con éxito'}, status=200)
-            elif 'status_code' in auth_response and auth_response['status_code'] == 429:
-                return Response({'error': 'Límite de registros excedidos'}, status=429)
-            else:
+@api_view(['POST'])
+def login(request):
+    user=get_object_or_404(CustomUser,email=request.data['email'])
+    if not user.check_password(request.data['password']):
+        return Response({'error':'Credenciales inválidas'},status=status.HTTP_400_BAD_REQUEST)
+    token, created = Token.objects.get_or_create(user=user)
+    serializer=UserSerializer(instance=user)
+    return Response({'token':token.key,'user':serializer.data},status=status.HTTP_200_OK)
 
-                return Response({'error': 'Error en el registro'}, status=400)
-        
-        except Exception as e:
-            return Response({'error': str(e)}, status=500)
-
-
-
-
-class Login(APIView):
-    def post(self, request):
-        try:
-            email = request.data.get('email')
-            password = request.data.get('password')
-
-            if not email or not password:
-                return Response({'error': 'Debes proporcionar un correo electrónico y una contraseña'}, status=400)
-
-            client = get_supabase_client()
-            auth_response = client.auth.sign_in(email, password)
-            if 'status_code' in auth_response and auth_response['status_code'] == 200:
-                return Response({'token': auth_response['access_token']})
-            else:
-                return Response({'error': 'Credenciales inválidas'}, status=400)
-        except Exception as e:
-            return Response({'error': str(e)}, status=500)
+@api_view(['POST'])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def profile(request):
+    serializer=UserSerializer(instance=request.user)
+    return Response(serializer.data,status=status.HTTP_200_OK)
