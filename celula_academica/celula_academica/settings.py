@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'proyectos',
     'tareas',
+    'clubs',
     'rest_framework.authtoken',
 ]
 
