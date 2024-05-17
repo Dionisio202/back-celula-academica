@@ -18,7 +18,7 @@ class UserAdmin(BaseUserAdmin):
             'fields': ('email', 'password1', 'password2','nombre', 'apellido', 'cedula', 'telefono', 'carrera', 'semestre', 'categoria'),
         }),
     )
-    search_fields = ('email', 'nombre', 'apellido')
+    search_fields = ('email', 'nombre', 'apellido','cedula')
     ordering = ('email',)
 
 admin.site.register(CustomUser, UserAdmin)
