@@ -63,7 +63,7 @@ class CustomUser(AbstractBaseUser):
     REQUIRED_FIELDS = ['cedula', 'telefono', 'carrera', 'semestre', 'categoria']
 
     def __str__(self):
-        return self.email  # Puedes cambiar esto a otro campo si prefieres
+        return self.email  
 
     def has_perm(self, perm, obj=None):
         return self.is_admin
