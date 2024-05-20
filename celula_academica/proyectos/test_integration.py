@@ -1,5 +1,5 @@
 from django.test import TestCase
-from rest_framework.test import APIClient  # Importa el cliente de pruebas de DRF
+from rest_framework.test import APIClient  
 from django.urls import reverse
 from tareas.models import Proyecto, Tarea
 from users.models import CustomUser
@@ -24,7 +24,7 @@ class ProyectoTareaIntegrationTest(TestCase):
             password='password123'
         )
         self.token = Token.objects.create(user=self.usuario_prueba)
-        self.client.force_authenticate(user=self.usuario_prueba)  # Autentica al usuario de prueba
+        self.client.force_authenticate(user=self.usuario_prueba)
         
         self.datos_proyecto = {
             'nombre': 'Proyecto de prueba',
@@ -47,7 +47,7 @@ class ProyectoTareaIntegrationTest(TestCase):
     def test_crear_proyecto_y_tarea(self):
         response_proyecto = self.client.post(reverse("register_proyecto"), self.datos_proyecto, format='json')
         print(response_proyecto.data)
-        self.assertEqual(response_proyecto.status_code, 201)  # Verificar que el proyecto se haya creado correctamente
+        self.assertEqual(response_proyecto.status_code, 201) 
         self.assertTrue(Proyecto.objects.filter(nombre='Proyecto de prueba').exists())
 
         proyecto_creado = Proyecto.objects.get(nombre='Proyecto de prueba')
@@ -56,7 +56,7 @@ class ProyectoTareaIntegrationTest(TestCase):
 
         response_tarea = self.client.post(reverse("crear_tarea"), self.datos_tarea, format='json')
         print(response_tarea.data)
-        self.assertEqual(response_tarea.status_code, 201)  # Verificar que la tarea se haya creado correctamente
+        self.assertEqual(response_tarea.status_code, 201)
         self.assertTrue(Tarea.objects.filter(nombre='Tarea de prueba', proyecto=proyecto_creado).exists())
 
     def test_actualizar_proyecto_y_tarea(self):
