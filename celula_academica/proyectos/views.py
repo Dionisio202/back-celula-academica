@@ -20,6 +20,7 @@ def register_proyecto(request):
     if serializer.is_valid():
         serializer.save(creador=request.user)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+        print(serializer.errors)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 #pk quiere decir la primary key del proyecto
 #para poder hacer todos estos metodos teienes que mandarle el token en el header
