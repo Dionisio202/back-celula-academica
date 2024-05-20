@@ -1,15 +1,38 @@
 from django.test import TestCase, Client
 from django.urls import reverse
-from tareas.models import Proyecto, Tarea
-from users.models import CustomUser
-from datetime import date
+from rest_framework import status
+from .models import CustomUser
+from rest_framework.authtoken.models import Token
+import json
 from django.contrib.auth.models import Group
 
-class ProyectoTareaIntegrationTest(TestCase):
+class IntegrationTest(TestCase):
+    
     def setUp(self):
         self.client = Client()
         self.group = Group.objects.create(name='Coli')
-        self.usuario_prueba = CustomUser.objects.create_user(
+
+    def test_register_user(self):
+        user_data = {
+            'email': 'test@example.com',
+            'nombre': 'Test',
+            'apellido': 'User',
+            'cedula': '123456789',
+            'telefono': '123456789',
+            'carrera': 'Test Carrera',
+            'semestre': 1,
+            'categoria': self.group.id,
+            'password': 'password123'
+        }
+
+        response = self.client.post('/user/register/', user_data, format='json')
+        print(response.data)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertIn('token', response.data)
+        self.assertEqual(response.data['email'], user_data['email'])
+
+    def test_login_user(self):
+        user = CustomUser.objects.create_user(
             email='test@example.com',
             nombre='Test',
             apellido='User',
@@ -17,22 +40,18 @@ class ProyectoTareaIntegrationTest(TestCase):
             telefono='123456789',
             carrera='Test Carrera',
             semestre=1,
-            categoria=self.group, 
+            categoria=self.group,  # Pasamos el objeto Group directamente
             password='password123'
         )
-       
-        self.datos_proyecto = {
-            'nombre': 'Proyecto de prueba',
-            'descripcion': 'Descripción del proyecto de prueba',
-            'fecha_inicio': date.today(),
-            'fecha_fin': date.today(),
-            'creador': self.usuario_prueba.id, 
-            
+
+        login_data = {
+            'email': 'test@example.com',
+            'password': 'password123'
         }
 
-    def test_crear_proyecto_y_tarea(self):
-        self.client.force_login(self.usuario_prueba) 
-        response_proyecto = self.client.post(reverse("register_proyecto"), self.datos_proyecto, content_type='application/json')
-        print(response_proyecto.data)
-        self.assertEqual(response_proyecto.status_code, 200)
-        self.assertTrue(Proyecto.objects.filter(nombre='Proyecto de prueba').exists())
+        response = self.client.post('/user/login/', login_data, format='json')
+        print(response.data)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('token', response.data)
+        self.assertIn('user', response.data)
+        self.assertEqual(response.data['user']['email'], user.email)
