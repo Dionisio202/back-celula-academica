@@ -8,11 +8,15 @@ class TareaAdmin(admin.ModelAdmin):
     search_fields = ('nombre',)
 
     def mostrar_imagen(self, obj):
-        if obj.fotografias:  # Verificar si hay una imagen asociada a la tarea
-            return format_html('<img src="{}" width="50" />', obj.fotografias.url)  # Devolver la etiqueta HTML con la URL de la imagen
+        if obj.fotografias:
+            return format_html(
+                '<a href="{}" target="_blank"><img src="{}" width="50"  /></a>',
+                obj.fotografias.url,
+                obj.fotografias.url,
+                obj.fotografias.url
+            )
         else:
-            return '(Sin imagen)'  # Si no hay imagen, mostrar un texto indicando que no hay imagen
-
+            return '(Sin imagen)'
     mostrar_imagen.short_description = 'Imagen'  # Nombre que se mostrará en la columna del administrador
 
 admin.site.register(Tarea, TareaAdmin)
