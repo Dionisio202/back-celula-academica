@@ -23,5 +23,10 @@ urlpatterns = [
     path('user/', include('users.urls')),
      path('proyects/', include('proyectos.urls')),
     path('tasks/', include('tareas.urls')),
-    path('clubs/', include('clubs.urls'))  
-]+static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    path('clubs/', include('clubs.urls')),
+    path('eventos/', include('eventos.urls')),
+    path('api/eventos/', include('eventos.api_urls')),
+    path('finanzas/', include('finanzas.urls')), 
+]
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

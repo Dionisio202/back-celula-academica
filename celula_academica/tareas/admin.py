@@ -17,7 +17,7 @@ class TareaAdmin(admin.ModelAdmin):
             )
         else:
             return '(Sin imagen)'
-    mostrar_imagen.short_description = 'Imagen'  # Nombre que se mostrará en la columna del administrador
+    mostrar_imagen.short_description = 'Imagen'  
 
 admin.site.register(Tarea, TareaAdmin)
 admin.site.site_header = 'Celula Academica'
