@@ -44,7 +44,8 @@ INSTALLED_APPS = [
     'clubs',
     'rest_framework.authtoken',
      'eventos',
-      'finanzas'
+      'finanzas',
+       'corsheaders'
 ]
 
 MIDDLEWARE = [
@@ -55,8 +56,13 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+     'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.common.CommonMiddleware'
 ]
+CORS_ORIGIN_WHITELIST = [
+    'http://localhost:3000',  
 
+]
 ROOT_URLCONF = 'celula_academica.urls'
 BASE_DIR = Path(__file__).resolve().parent.parent
 
