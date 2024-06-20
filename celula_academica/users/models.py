@@ -1,10 +1,10 @@
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
-from django.core.validators import MinValueValidator, MaxValueValidator
-from django.core.validators import RegexValidator
+from django.core.validators import MinValueValidator, MaxValueValidator, RegexValidator
 from django.contrib.auth.models import Group
+
 class CustomUserManager(BaseUserManager):
-    def create_user(self, email,nombre, apellido, cedula, telefono, carrera, semestre, categoria, password=None):
+    def create_user(self, email, nombre, apellido, cedula, telefono, carrera, semestre, categoria, password=None):
         if not email:
             raise ValueError('El usuario debe tener una dirección de correo electrónico')
 
@@ -23,7 +23,7 @@ class CustomUserManager(BaseUserManager):
         user.save(using=self._db)
         return user
 
-    def create_superuser(self, email,nombre, apellido, cedula, telefono, carrera, semestre, categoria, password=None):
+    def create_superuser(self, email, nombre, apellido, cedula, telefono, carrera, semestre, categoria, password=None):
         user = self.create_user(
             email=email,
             nombre=nombre,
@@ -41,21 +41,35 @@ class CustomUserManager(BaseUserManager):
         return user
 
 class CustomUser(AbstractBaseUser):
- 
-    nombre = models.CharField(max_length=50)
-    apellido = models.CharField(max_length=50)
+    nombre = models.CharField(
+        max_length=50,
+        validators=[RegexValidator(r'^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$', 'Ingrese solo letras para el nombre.')]
+    )
+    apellido = models.CharField(
+        max_length=50,
+        validators=[RegexValidator(r'^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$', 'Ingrese solo letras para el apellido.')]
+    )
     email = models.EmailField(unique=True)  # Hace que el correo electrónico sea único
-    cedula = models.CharField(max_length=10, unique=True, validators=[RegexValidator(r'^\d{1,10}$', 'Ingrese solo números.')])
-    telefono = models.CharField(max_length=10, validators=[RegexValidator(r'^\d{1,10}$', 'Ingrese solo números.')])
-    carrera = models.CharField(max_length=100)
+    cedula = models.CharField(
+        max_length=10,
+        unique=True,
+        validators=[RegexValidator(r'^\d{10}$', 'La cédula debe tener exactamente 10 dígitos y solo números.')]
+    )
+    telefono = models.CharField(
+        max_length=10,
+        validators=[RegexValidator(r'^\d{10}$', 'El teléfono debe tener exactamente 10 dígitos y solo números.')]
+    )
+    carrera = models.CharField(
+        max_length=100,
+        validators=[RegexValidator(r'^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$', 'Ingrese solo letras para la carrera.')]
+    )
     semestre = models.IntegerField(
-        validators=[MinValueValidator(0,"El semestre debe ser un número entre 0 y 10"), MaxValueValidator(10,"El semestre debe ser un número entre 0 y 10")]
+        validators=[MinValueValidator(0, "El semestre debe ser un número entre 0 y 10"), MaxValueValidator(10, "El semestre debe ser un número entre 0 y 10")]
     )
     is_active = models.BooleanField(default=True)
     is_admin = models.BooleanField(default=False)
     is_staff = models.BooleanField(default=False) 
     categoria = models.ForeignKey(Group, on_delete=models.SET_NULL, null=True, related_name='user', blank=True)
-
 
     objects = CustomUserManager()  # Asociar el manager con el modelo
 

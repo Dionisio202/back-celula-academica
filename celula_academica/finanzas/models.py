@@ -1,3 +1,4 @@
+# models.py
 from django.db import models
 from eventos.models import Concurso, InscripcionConcurso
 
