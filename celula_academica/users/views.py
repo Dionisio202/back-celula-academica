@@ -8,6 +8,28 @@ from .models import CustomUser
 from rest_framework.authtoken.models import Token
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.authentication import TokenAuthentication
+from django.contrib.auth.tokens import default_token_generator
+from django.utils.http import urlsafe_base64_encode
+from django.utils.encoding import force_bytes
+from django.urls import reverse
+from django.core.mail import send_mail
+from django.conf import settings
+
+def send_reset_password_email(user):
+    token = default_token_generator.make_token(user)
+    uid = urlsafe_base64_encode(force_bytes(user.pk))
+    password_reset_url = reverse('password_reset_confirm', kwargs={'uidb64': uid, 'token': token})
+    password_reset_link = f"{settings.DOMAIN_NAME}{password_reset_url}"
+    
+    # Enviar correo electrónico con el enlace de restablecimiento de contraseña
+    send_mail(
+        'Registro exitoso',
+        f'Hola {user.nombre} {user.apellido},\n\nGracias por registrarte. Por favor, haz clic en el siguiente enlace para establecer tu contraseña:\n\n{password_reset_link}',
+        settings.EMAIL_HOST_USER,  # Remitente
+        [user.email],  # Destinatario (correo del usuario registrado)
+        fail_silently=False,
+    )
+
 #Registro de usuario
 @api_view(['POST'])
 def register(request):
