@@ -38,7 +38,11 @@ class Evento(models.Model):
 class Concurso(Evento):
     competencia_individual = models.BooleanField()
     max_integrantes = models.PositiveIntegerField(null=True, blank=True)
-    valor_inscripcion = models.DecimalField(max_digits=10, decimal_places=2)
+    valor_inscripcion = models.DecimalField(
+        max_digits=10, 
+        decimal_places=2,
+        validators=[MinValueValidator(0.0, "El valor de la inscripción no puede ser negativo.")]
+    )
 
     def __str__(self):
         return self.nombre
