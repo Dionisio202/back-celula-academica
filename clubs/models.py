@@ -15,7 +15,7 @@ class Club(models.Model):
 class Proyecto(models.Model):
     nombre = models.CharField(max_length=100)
     descripcion = models.TextField()
-    club = models.ForeignKey(Club, on_delete=models.CASCADE, related_name='proyectos')
+    club = models.ForeignKey(Club, on_delete=models.CASCADE, related_name='proyectos_del_club')
 
     def __str__(self):
         return self.nombre
