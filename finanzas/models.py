@@ -1,18 +1,26 @@
 # models.py
 from django.db import models
 from eventos.models import Concurso, InscripcionConcurso
-
+from django.core.validators import MinValueValidator
 class PagoInscripcion(models.Model):
     inscripcion = models.ForeignKey(InscripcionConcurso, on_delete=models.CASCADE)
     fecha_pago = models.DateField()
-    monto = models.DecimalField(max_digits=10, decimal_places=2)
+    monto = models.DecimalField(
+        max_digits=10, 
+        decimal_places=2,
+        validators=[MinValueValidator(0.0, "El valor del monto no puede ser negativo.")]
+    )
 
     def __str__(self):
         return f'Pago de {self.inscripcion.nombre} {self.inscripcion.apellido} para {self.inscripcion.concurso.nombre}'
 
 class IngresoEconomico(models.Model):
     fecha_ingreso = models.DateField()
-    monto = models.DecimalField(max_digits=10, decimal_places=2)
+    monto = models.DecimalField(
+        max_digits=10, 
+        decimal_places=2,
+        validators=[MinValueValidator(0.0, "El valor del monto no puede ser negativo.")]
+    )
     tipo_ingreso = models.CharField(max_length=50, choices=[
         ('donacion', 'Donación'),
         ('concurso', 'Concurso'),
@@ -25,7 +33,12 @@ class IngresoEconomico(models.Model):
 
 class EgresoEconomico(models.Model):
     fecha_egreso = models.DateField()
-    monto = models.DecimalField(max_digits=10, decimal_places=2)
+    monto =  models.DecimalField(
+        max_digits=10, 
+        decimal_places=2,
+        validators=[MinValueValidator(0.0, "El valor del monto no puede ser negativo.")]
+    )
+
     descripcion = models.TextField()
     tipo_egreso = models.CharField(max_length=50, choices=[
         ('pagos', 'Pagos'),
