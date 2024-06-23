@@ -27,6 +27,7 @@ urlpatterns = [
     path('eventos/', include('eventos.urls')),
     path('api/eventos/', include('eventos.api_urls')),
     path('finanzas/', include('finanzas.urls')), 
+    path('api/finanzas/', include('finanzas.api_urls')),
 ]
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
