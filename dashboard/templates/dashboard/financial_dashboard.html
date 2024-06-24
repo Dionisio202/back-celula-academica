@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Financial Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-gray-100">
+    <header class="bg-gray-900 text-white p-4 flex justify-between items-center">
+        <div class="flex items-center space-x-2">
+            <div class="text-xl font-bold ">Financial Dashboard</div>
+        </div>
+        <button id="menu-btn" class="md:hidden block text-white focus:outline-none">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+            </svg>
+        </button>
+        <nav class="hidden md:flex space-x-8" id="menu">
+            <a href="https://admin-celula-academica.onrender.com/admin/" class="hover:text-gray-200">Admin</a>
+            <a href="https://www.instagram.com/edison_ortiz202/" class="hover:text-gray-200">HomePage</a>
+        </nav>
+    </header>
+
+    <!-- Menu móvil -->
+    <div class="hidden md:hidden" id="mobile-menu">
+        <a href="https://admin-celula-academica.onrender.com/admin/" class="block px-4 py-2 text-sm text-black hover:bg-gray-200">Admin</a>
+        <a href="https://www.instagram.com/edison_ortiz202/" class="block px-4 py-2 text-sm text-black hover:bg-gray-200">HomePage</a>
+    </div>
+
+    <div class="container mx-auto p-4">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="bg-green-500 text-white rounded-lg p-4">
+                <div class="font-bold text-xl mb-2">Total Ingresos</div>
+                <div class="text-2xl">{{ total_ingresos }}</div>
+            </div>
+            <div class="bg-red-500 text-white rounded-lg p-4">
+                <div class="font-bold text-xl mb-2">Total Egresos</div>
+                <div class="text-2xl">{{ total_egresos }}</div>
+            </div>
+            <div class="bg-blue-500 text-white rounded-lg p-4">
+                <div class="font-bold text-xl mb-2">Balance</div>
+                <div class="text-2xl">{{ balance }}</div>
+            </div>
+        </div>
+        <div class="graph-div mx-auto max-w-screen-lg overflow-hidden mt-8">
+            <canvas id="myPieChart"></canvas>
+        </div>
+    </div>
+
+    <script>
+        var ctx = document.getElementById('myPieChart').getContext('2d');
+        var myPieChart = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: ['Ingresos', 'Egresos'],
+                datasets: [{
+                    label: 'Ingresos vs Egresos',
+                    data: [{{ total_ingresos }}, {{ total_egresos }}],
+                    backgroundColor: [
+                        'rgba(40, 180, 99, 0.2)', // Verde
+                        'rgba(231, 76, 60, 0.2)'   // Rojo
+                    ],
+                    borderColor: [
+                        'rgba(40, 180, 99, 1)',
+                        'rgba(231, 76, 60, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                layout: {
+                    padding: {
+                        top: 20  // Margen arriba
+                    }
+                }
+            }
+        });
+    </script>
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script>
+        AOS.init();
+
+        // Toggle mobile menu
+        const menuBtn = document.getElementById('menu-btn');
+        const menu = document.getElementById('menu');
+        const mobileMenu = document.getElementById('mobile-menu');
+
+        menuBtn.addEventListener('click', () => {
+            mobileMenu.classList.toggle('hidden');
+        });
+    </script>
+</body>
+</html>

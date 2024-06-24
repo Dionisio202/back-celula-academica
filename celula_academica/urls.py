@@ -18,6 +18,8 @@ from django.contrib import admin
 from django.urls import path ,include
 from django.conf import settings
 from django.conf.urls.static import static
+
+admin.site.site_url = "https://admin-celula-academica.onrender.com/dashboard/"
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('user/', include('users.urls')),
@@ -28,6 +30,9 @@ urlpatterns = [
     path('api/eventos/', include('eventos.api_urls')),
     path('finanzas/', include('finanzas.urls')), 
     path('api/finanzas/', include('finanzas.api_urls')),
+    path('dashboard/', include('dashboard.urls')),  # Agregar esta línea
+
+
 ]
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

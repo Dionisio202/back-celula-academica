@@ -47,7 +47,8 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
      'eventos',
       'finanzas',
-       'corsheaders'
+       'corsheaders',
+       'dashboard',
 ]
 
 MIDDLEWARE = [
