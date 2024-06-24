@@ -7,6 +7,7 @@ from .models import Proyecto
 from .serializers import ProyectoSerializer
 from django.contrib.auth.models import Group
 from users.models import CustomUser
+from clubs.models import Club  # Ensure to import your Club model
 
 User = get_user_model()
 
@@ -26,6 +27,11 @@ class RegisterProyectoTest(APITestCase):
             categoria=cls.group
         )
         cls.token = Token.objects.create(user=cls.user)
+        cls.club = Club.objects.create(
+            nombre='Club de Prueba',
+            descripcion='Descripción del club de prueba',
+            responsable=cls.user
+        )
         cls.url = reverse('register_proyecto')
 
     def setUp(self):
@@ -40,9 +46,11 @@ class RegisterProyectoTest(APITestCase):
             'fecha_fin': '2023-12-19',
             'estado': 'En progreso',
             'creador': self.user.id,
-            'miembros': [self.user.id]
+            'miembros': [self.user.id],
+            'club': self.club.id  # Include the club ID
         }
         response = self.client.post(self.url, valid_data, format='json')
+        print(f'\nTest: test_register_proyecto_with_complete_data\nResponse Data: {response.data}\nResponse Code: {response.status_code}')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Proyecto.objects.count(), 1)
         self.assertEqual(Proyecto.objects.get().nombre, 'Proyecto de Prueba')
@@ -53,6 +61,7 @@ class RegisterProyectoTest(APITestCase):
             'descripcion': 'Descripción del proyecto incompleto',
         }
         response = self.client.post(self.url, incomplete_data, format='json')
+        print(f'\nTest: test_register_proyecto_with_incomplete_data\nResponse Data: {response.data}\nResponse Code: {response.status_code}')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(Proyecto.objects.count(), 0)
 
@@ -73,12 +82,18 @@ class UpdateProyectoTest(APITestCase):
             categoria=cls.group
         )
         cls.token = Token.objects.create(user=cls.user)
+        cls.club = Club.objects.create(
+            nombre='Club de Prueba',
+            descripcion='Descripción del club de prueba',
+            responsable=cls.user
+        )
         cls.proyecto = Proyecto.objects.create(
             nombre='Proyecto Inicial',
             descripcion='Descripción inicial',
             fecha_inicio='2023-01-01',
             fecha_fin='2023-06-30',
-            creador=cls.user
+            creador=cls.user,
+            club=cls.club  # Ensure the project is associated with the club
         )
         cls.url = reverse('update_proyecto', kwargs={'pk': cls.proyecto.pk})
 
@@ -94,6 +109,7 @@ class UpdateProyectoTest(APITestCase):
             'fecha_fin': '2023-07-01'
         }
         response = self.client.put(self.url, complete_data, format='json')
+        print(f'\nTest: test_update_proyecto_with_complete_data\nResponse Data: {response.data}\nResponse Code: {response.status_code}')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.proyecto.refresh_from_db()
         self.assertEqual(self.proyecto.nombre, 'Proyecto Modificado')
@@ -106,7 +122,7 @@ class UpdateProyectoTest(APITestCase):
             'nombre': ''
         }
         response = self.client.put(self.url, incomplete_data, format='json')
+        print(f'\nTest: test_update_proyecto_with_incomplete_data\nResponse Data: {response.data}\nResponse Code: {response.status_code}')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.proyecto.refresh_from_db()
         self.assertNotEqual(self.proyecto.nombre, '')
-

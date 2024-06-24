@@ -1,12 +1,25 @@
-from django.shortcuts import render
-from rest_framework.decorators import api_view
-from rest_framework.response import Response
-from rest_framework.authtoken.models import Token
-from rest_framework import status 
-from django.shortcuts import get_object_or_404
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.decorators import permission_classes , authentication_classes
-from rest_framework.authentication import TokenAuthentication
-@api_view(['GET'])
-def hello(request):
-    return Response({'message':'Hello World!'})
+from rest_framework import generics
+from .models import Club, Proyecto
+from .serializers import ClubSerializer, ProyectoSerializer
+
+# CRUD para Club
+class ClubListCreateAPIView(generics.ListCreateAPIView):
+    queryset = Club.objects.all()
+    serializer_class = ClubSerializer
+
+
+class ClubRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Club.objects.all()
+    serializer_class = ClubSerializer
+ 
+
+# CRUD para Proyecto
+class ProyectoListCreateAPIView(generics.ListCreateAPIView):
+    queryset = Proyecto.objects.all()
+    serializer_class = ProyectoSerializer
+  
+
+class ProyectoRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Proyecto.objects.all()
+    serializer_class = ProyectoSerializer
+  

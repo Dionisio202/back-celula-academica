@@ -1,166 +1,296 @@
-from django.contrib.auth import get_user_model
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase, APIClient
-from rest_framework.authtoken.models import Token
-from .models import Tarea, Proyecto
-from django.contrib.auth.models import Group
-from users.models import CustomUser
+from django.contrib.auth import get_user_model
+from .models import PagoInscripcion, IngresoEconomico, EgresoEconomico, Concurso, InscripcionConcurso
+from decimal import Decimal
 from datetime import date
+from django.contrib.auth.models import Group
 
-User = get_user_model()
+CustomUser = get_user_model()
 
-class CrearTareaTest(APITestCase):
-    @classmethod
-    def setUpTestData(cls):
-        cls.group = Group.objects.create(name='Empleado')
-        cls.user = CustomUser.objects.create_user(
-            email='user1@example.com',
-            password='12345678',
-            nombre='John',
-            apellido='Doe',
-            cedula='1805033726',
-            telefono='099783456',
-            carrera='Software',
-            semestre=4,
-            categoria=cls.group
-        )
-        cls.proyecto = Proyecto.objects.create(
-            nombre='Proyecto de Prueba',
-            descripcion='Descripción del proyecto de prueba',
-            fecha_inicio='2023-01-01',
-            fecha_fin='2023-12-31',
-            creador=cls.user
-        )
-        cls.token = Token.objects.create(user=cls.user)
-        cls.url = reverse('crear_tarea')
-
+class PagoInscripcionAPITests(APITestCase):
     def setUp(self):
+        group = Group.objects.create(name='Test Group')
+        self.user = CustomUser.objects.create_user(
+            email='testuser@example.com',
+            nombre='Nombre',
+            apellido='Apellido',
+            cedula='1234567890',
+            telefono='0987654321',
+            carrera='Ingeniería en Sistemas',
+            semestre=5,
+            categoria=group,
+            password='testpassword'
+        )
         self.client = APIClient()
-        self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.token.key)
+        self.client.login(email='testuser@example.com', password='testpassword')
+        self.concurso = Concurso.objects.create(
+            nombre='Concurso de Programación',
+            descripcion='Un concurso para los mejores programadores.',
+            fecha_inicio='2024-07-01',
+            fecha_fin='2024-07-05',
+            competencia_individual=True,
+            valor_inscripcion=Decimal('100.00')
+        )
+        self.inscripcion = InscripcionConcurso.objects.create(
+            cedula='1234567890',
+            nombre='Luis',
+            apellido='García',
+            telefono='0987654321',
+            correo='luis.garcia@example.com',
+            carrera='Ingeniería en Sistemas',
+            semestre=5,
+            concurso=self.concurso
+        )
+        self.url = reverse('pagoinscripcion-list-create')
 
-    def test_crear_tarea_con_datos_completos(self):
-        valid_data = {
-            'nombre': 'Tarea de Prueba',
-            'descripcion': 'Descripción de la tarea de prueba',
-            'fecha_limite': '2023-12-19',
-            'estado': 'en_proceso',
-            'miembros_responsables': [self.user.id],
-            'proyecto': self.proyecto.id
+    def test_create_pago_inscripcion(self):
+        data = {
+            'inscripcion': self.inscripcion.id,
+            'fecha_pago': date.today(),
+            'monto': '100.00'
         }
-        response = self.client.post(self.url, valid_data, format='json')
+        response = self.client.post(self.url, data, format='json')
+        print(f'\nTest: test_create_pago_inscripcion\nResponse Data: {response.data} \nResponse Code: {response.status_code}')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(Tarea.objects.count(), 1)
-        self.assertEqual(Tarea.objects.get().nombre, 'Tarea de Prueba')
+        self.assertEqual(PagoInscripcion.objects.count(), 1)
+        self.assertEqual(IngresoEconomico.objects.count(), 1)
+        pago = PagoInscripcion.objects.first()
+        self.assertEqual(pago.monto, Decimal('100.00'))
+        ingreso = IngresoEconomico.objects.first()
+        self.assertEqual(ingreso.monto, Decimal('100.00'))
 
-    def test_crear_tarea_con_datos_incompletos(self):
-        incomplete_data = {
-            'nombre': 'Tarea Incompleta',
-            'descripcion': 'Descripción de la tarea incompleta',
-        }
-        response = self.client.post(self.url, incomplete_data, format='json')
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(Tarea.objects.count(), 0)
-
-
-class ActualizarTareaTest(APITestCase):
-    @classmethod
-    def setUpTestData(cls):
-        cls.group = Group.objects.create(name='Empleado')
-        cls.user = CustomUser.objects.create_user(
-            email='user1@example.com',
-            password='12345678',
-            nombre='John',
-            apellido='Doe',
-            cedula='1805033726',
-            telefono='099783456',
-            carrera='Software',
-            semestre=4,
-            categoria=cls.group
+    def test_list_pago_inscripcion(self):
+        PagoInscripcion.objects.create(
+            inscripcion=self.inscripcion,
+            fecha_pago=date.today(),
+            monto=Decimal('100.00')
         )
-        cls.proyecto = Proyecto.objects.create(
-            nombre='Proyecto de Prueba',
-            descripcion='Descripción del proyecto de prueba',
-            fecha_inicio='2023-01-01',
-            fecha_fin='2023-12-31',
-            creador=cls.user
-        )
-        cls.tarea = Tarea.objects.create(
-            nombre='Tarea Inicial',
-            descripcion='Descripción inicial de la tarea',
-            fecha_limite='2023-12-19',
-            estado='sin_asignar',
-            proyecto=cls.proyecto
-        )
-        cls.tarea.miembros_responsables.add(cls.user)
-        cls.token = Token.objects.create(user=cls.user)
-        cls.url = reverse('actualizar_tarea', kwargs={'pk': cls.tarea.pk})
-
-    def setUp(self):
-        self.client = APIClient()
-        self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.token.key)
-
-    def test_actualizar_tarea_con_datos_completos(self):
-        updated_data = {
-            'nombre': 'Tarea Actualizada',
-            'descripcion': 'Descripción actualizada de la tarea',
-            'fecha_limite': '2023-12-31',
-            'estado': 'en_proceso',
-            'miembros_responsables': [self.user.id]
-        }
-        response = self.client.put(self.url, updated_data, format='json')
+        response = self.client.get(self.url)
+        print(f'\nTest: test_list_pago_inscripcion\nResponse Data: {response.data}\nResponse Code: {response.status_code}')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.tarea.refresh_from_db()
-        self.assertEqual(self.tarea.nombre, 'Tarea Actualizada')
-        self.assertEqual(self.tarea.descripcion, 'Descripción actualizada de la tarea')
-        self.assertEqual(self.tarea.fecha_limite, date(2023, 12, 31))
-        self.assertEqual(self.tarea.estado, 'en_proceso')
+        self.assertEqual(len(response.data), 1)
 
-    def test_actualizar_tarea_con_datos_incompletos(self):
-        incomplete_data = {
-            'nombre': ''
-        }
-        response = self.client.put(self.url, incomplete_data, format='json')
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-
-
-class EliminarTareaTest(APITestCase):
-    @classmethod
-    def setUpTestData(cls):
-        cls.group = Group.objects.create(name='Empleado')
-        cls.user = CustomUser.objects.create_user(
-            email='user1@example.com',
-            password='12345678',
-            nombre='John',
-            apellido='Doe',
-            cedula='1805033726',
-            telefono='099783456',
-            carrera='Software',
-            semestre=4,
-            categoria=cls.group
+    def test_retrieve_pago_inscripcion(self):
+        pago = PagoInscripcion.objects.create(
+            inscripcion=self.inscripcion,
+            fecha_pago=date.today(),
+            monto=Decimal('100.00')
         )
-        cls.proyecto = Proyecto.objects.create(
-            nombre='Proyecto de Prueba',
-            descripcion='Descripción del proyecto de prueba',
-            fecha_inicio='2023-01-01',
-            fecha_fin='2023-12-31',
-            creador=cls.user
-        )
-        cls.tarea = Tarea.objects.create(
-            nombre='Tarea de Prueba',
-            descripcion='Descripción de la tarea de prueba',
-            fecha_limite='2023-06-30',
-            estado='sin_asignar',
-            proyecto=cls.proyecto  
-        )
-        cls.url = reverse('eliminar_tarea', kwargs={'pk': cls.tarea.pk})
-        cls.token = Token.objects.create(user=cls.user)
-        
-    def setUp(self):
-        self.client = APIClient()
-        self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.token.key)
-
-    def test_eliminar_tarea(self):
-        response = self.client.delete(self.url)
+        url = reverse('pagoinscripcion-detail', kwargs={'pk': pago.id})
+        response = self.client.get(url)
+        print(f'\nTest: test_retrieve_pago_inscripcion\nResponse Data: {response.data}\nResponse Code: {response.status_code}')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertFalse(Tarea.objects.filter(pk=self.tarea.pk).exists())
+        self.assertEqual(response.data['monto'], '100.00')
+
+    def test_update_pago_inscripcion(self):
+        pago = PagoInscripcion.objects.create(
+            inscripcion=self.inscripcion,
+            fecha_pago=date.today(),
+            monto=Decimal('100.00')
+        )
+        url = reverse('pagoinscripcion-detail', kwargs={'pk': pago.id})
+        data = {
+            'inscripcion': self.inscripcion.id,
+            'fecha_pago': date.today(),
+            'monto': '150.00'
+        }
+        response = self.client.put(url, data, format='json')
+        print(f'\nTest: test_update_pago_inscripcion\nResponse Data: {response.data}\nResponse Code: {response.status_code}')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        pago.refresh_from_db()
+        self.assertEqual(pago.monto, Decimal('150.00'))
+
+    def test_delete_pago_inscripcion(self):
+        pago = PagoInscripcion.objects.create(
+            inscripcion=self.inscripcion,
+            fecha_pago=date.today(),
+            monto=Decimal('100.00')
+        )
+        url = reverse('pagoinscripcion-detail', kwargs={'pk': pago.id})
+        response = self.client.delete(url)
+
+        print(f'\nTest: test_delete_pago_inscripcion\nResponse Data: {response.data}\nResponse Code: {response.status_code}')
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(PagoInscripcion.objects.count(), 0)
+
+
+class IngresoEconomicoAPITests(APITestCase):
+    def setUp(self):
+        group = Group.objects.create(name='Test Group')
+        self.user = CustomUser.objects.create_user(
+            email='testuser@example.com',
+            nombre='Nombre',
+            apellido='Apellido',
+            cedula='1234567890',
+            telefono='0987654321',
+            carrera='Ingeniería en Sistemas',
+            semestre=5,
+            categoria=group,
+            password='testpassword'
+        )
+        self.client = APIClient()
+        self.client.login(email='testuser@example.com', password='testpassword')
+        self.url = reverse('ingresoeconomico-list-create')
+
+    def test_create_ingreso_economico(self):
+        data = {
+            'fecha_ingreso': date.today(),
+            'monto': '200.00',
+            'tipo_ingreso': 'donacion'
+        }
+        response = self.client.post(self.url, data, format='json')
+        print(f'\nTest: test_create_ingreso_economico\nResponse Data: {response.data}\nResponse Code: {response.status_code}')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(IngresoEconomico.objects.count(), 1)
+        ingreso = IngresoEconomico.objects.first()
+        self.assertEqual(ingreso.monto, Decimal('200.00'))
+
+    def test_list_ingreso_economico(self):
+        IngresoEconomico.objects.create(
+            fecha_ingreso=date.today(),
+            monto=Decimal('200.00'),
+            tipo_ingreso='donacion'
+        )
+        response = self.client.get(self.url)
+        print(f'\nTest: test_list_ingreso_economico\nResponse Data: {response.data} \nResponse Code: {response.status_code}')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+
+    def test_retrieve_ingreso_economico(self):
+        ingreso = IngresoEconomico.objects.create(
+            fecha_ingreso=date.today(),
+            monto=Decimal('200.00'),
+            tipo_ingreso='donacion'
+        )
+        url = reverse('ingresoeconomico-detail', kwargs={'pk': ingreso.id})
+        response = self.client.get(url)
+        print(f'\nTest: test_retrieve_ingreso_economico\nResponse Data: {response.data}\nResponse Code: {response.status_code}')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['monto'], '200.00')
+
+    def test_update_ingreso_economico(self):
+        ingreso = IngresoEconomico.objects.create(
+            fecha_ingreso=date.today(),
+            monto=Decimal('200.00'),
+            tipo_ingreso='donacion'
+        )
+        url = reverse('ingresoeconomico-detail', kwargs={'pk': ingreso.id})
+        data = {
+            'fecha_ingreso': date.today(),
+            'monto': '250.00',
+            'tipo_ingreso': 'concurso'
+        }
+        response = self.client.put(url, data, format='json')
+        print(f'\nTest: test_update_ingreso_economico\nResponse Data: {response.data}\nResponse Code: {response.status_code}')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        ingreso.refresh_from_db()
+        self.assertEqual(ingreso.monto, Decimal('250.00'))
+
+    def test_delete_ingreso_economico(self):
+        ingreso = IngresoEconomico.objects.create(
+            fecha_ingreso=date.today(),
+            monto=Decimal('200.00'),
+            tipo_ingreso='donacion'
+        )
+        url = reverse('ingresoeconomico-detail', kwargs={'pk': ingreso.id})
+        response = self.client.delete(url)
+        print(f'\nTest: test_delete_ingreso_economico\nResponse Data: {response.data}\nResponse Code: {response.status_code}')
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(IngresoEconomico.objects.count(), 0)
+
+
+class EgresoEconomicoAPITests(APITestCase):
+    def setUp(self):
+        group = Group.objects.create(name='Test Group')
+        self.user = CustomUser.objects.create_user(
+            email='testuser@example.com',
+            nombre='Nombre',
+            apellido='Apellido',
+            cedula='1234567890',
+            telefono='0987654321',
+            carrera='Ingeniería en Sistemas',
+            semestre=5,
+            categoria=group,
+            password='testpassword'
+        )
+        self.client = APIClient()
+        self.client.login(email='testuser@example.com', password='testpassword')
+        self.url = reverse('egresoeconomico-list-create')
+
+    def test_create_egreso_economico(self):
+        data = {
+            'fecha_egreso': date.today(),
+            'monto': '150.00',
+            'descripcion': 'Compra de materiales',
+            'tipo_egreso': 'pagos'
+        }
+        response = self.client.post(self.url, data, format='json')
+        print(f'\nTest: test_create_egreso_economico\nResponse Data: {response.data}\nResponse Code: {response.status_code}')
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(EgresoEconomico.objects.count(), 1)
+        egreso = EgresoEconomico.objects.first()
+        self.assertEqual(egreso.monto, Decimal('150.00'))
+
+    def test_list_egreso_economico(self):
+        EgresoEconomico.objects.create(
+            fecha_egreso=date.today(),
+            monto=Decimal('150.00'),
+            descripcion='Compra de materiales',
+            tipo_egreso='pagos'
+        )
+        response = self.client.get(self.url)
+        print(f'\nTest: test_list_egreso_economico\nResponse Data: {response.data}\nResponse Code: {response.status_code}')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+
+    def test_retrieve_egreso_economico(self):
+        egreso = EgresoEconomico.objects.create(
+            fecha_egreso=date.today(),
+            monto=Decimal('150.00'),
+            descripcion='Compra de materiales',
+            tipo_egreso='pagos'
+        )
+        url = reverse('egresoeconomico-detail', kwargs={'pk': egreso.id})
+        response = self.client.get(url)
+        print(f'\nTest: test_retrieve_egreso_economico\nResponse Data: {response.data}\nResponse Code: {response.status_code}')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['monto'], '150.00')
+
+    def test_update_egreso_economico(self):
+        egreso = EgresoEconomico.objects.create(
+            fecha_egreso=date.today(),
+            monto=Decimal('150.00'),
+            descripcion='Compra de materiales',
+            tipo_egreso='pagos'
+        )
+        url = reverse('egresoeconomico-detail', kwargs={'pk': egreso.id})
+        data = {
+            'fecha_egreso': date.today(),
+            'monto': '180.00',
+            'descripcion': 'Compra de servicios',
+            'tipo_egreso': 'concurso'
+        }
+        response = self.client.put(url, data, format='json')
+        print(f'\nTest: test_update_egreso_economico\nResponse Data: {response.data}\nResponse Code: {response.status_code}')
+       
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        egreso.refresh_from_db()
+        self.assertEqual(egreso.monto, Decimal('180.00'))
+
+    def test_delete_egreso_economico(self):
+        egreso = EgresoEconomico.objects.create(
+            fecha_egreso=date.today(),
+            monto=Decimal('150.00'),
+            descripcion='Compra de materiales',
+            tipo_egreso='pagos'
+        )
+        url = reverse('egresoeconomico-detail', kwargs={'pk': egreso.id})
+        response = self.client.delete(url)
+        print(f'\nTest: test_delete_egreso_economico\nResponse Data: {response.data}\nResponse Code: {response.status_code}')
+
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(EgresoEconomico.objects.count(), 0)

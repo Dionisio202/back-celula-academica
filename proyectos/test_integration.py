@@ -7,6 +7,7 @@ from datetime import date
 from django.contrib.auth.models import Group
 from rest_framework import status
 from rest_framework.authtoken.models import Token
+from clubs.models import Club  # Ensure to import your Club model
 
 class ProyectoTareaIntegrationTest(TestCase):
     def setUp(self):
@@ -25,6 +26,13 @@ class ProyectoTareaIntegrationTest(TestCase):
         )
         self.token = Token.objects.create(user=self.usuario_prueba)
         self.client.force_authenticate(user=self.usuario_prueba)
+
+        # Create a Club instance
+        self.club = Club.objects.create(
+            nombre='Club de Prueba',
+            descripcion='Descripción del club de prueba',
+            responsable=self.usuario_prueba
+        )
         
         self.datos_proyecto = {
             'nombre': 'Proyecto de prueba',
@@ -32,7 +40,8 @@ class ProyectoTareaIntegrationTest(TestCase):
             'fecha_inicio': date.today(),
             'fecha_fin': date.today(),
             'creador': self.usuario_prueba.id,
-            'miembros': [self.usuario_prueba.id]
+            'miembros': [self.usuario_prueba.id],
+            'club': self.club.id  # Assign the club to the project
         }
 
         self.datos_tarea = {
@@ -46,7 +55,7 @@ class ProyectoTareaIntegrationTest(TestCase):
 
     def test_crear_proyecto_y_tarea(self):
         response_proyecto = self.client.post(reverse("register_proyecto"), self.datos_proyecto, format='json')
-        print(response_proyecto.data)
+        print(f'\nTest: test_crear_proyecto_y_tarea (Crear Proyecto)\nResponse Data: {response_proyecto.data}\nResponse Code: {response_proyecto.status_code}')
         self.assertEqual(response_proyecto.status_code, 201) 
         self.assertTrue(Proyecto.objects.filter(nombre='Proyecto de prueba').exists())
 
@@ -55,7 +64,7 @@ class ProyectoTareaIntegrationTest(TestCase):
         self.datos_tarea['proyecto'] = proyecto_creado.id
 
         response_tarea = self.client.post(reverse("crear_tarea"), self.datos_tarea, format='json')
-        print(response_tarea.data)
+        print(f'\nTest: test_crear_proyecto_y_tarea (Crear Tarea)\nResponse Data: {response_tarea.data}\nResponse Code: {response_tarea.status_code}')
         self.assertEqual(response_tarea.status_code, 201)
         self.assertTrue(Tarea.objects.filter(nombre='Tarea de prueba', proyecto=proyecto_creado).exists())
 
@@ -65,7 +74,8 @@ class ProyectoTareaIntegrationTest(TestCase):
             descripcion="Descripción original", 
             fecha_inicio=date.today(), 
             fecha_fin=date.today(), 
-            creador=self.usuario_prueba
+            creador=self.usuario_prueba,
+            club=self.club  # Ensure the project is associated with the club
         )
         tarea = Tarea.objects.create(
             nombre="Tarea original", 
@@ -80,6 +90,7 @@ class ProyectoTareaIntegrationTest(TestCase):
             "descripcion": "Descripción actualizada"
         }
         response_proyecto = self.client.put(reverse("update_proyecto", kwargs={"pk": proyecto.id}), proyecto_data, format='json')
+        print(f'\nTest: test_actualizar_proyecto_y_tarea (Actualizar Proyecto)\nResponse Data: {response_proyecto.data}\nResponse Code: {response_proyecto.status_code}')
         self.assertEqual(response_proyecto.status_code, status.HTTP_200_OK)
 
         tarea_data = {
@@ -87,6 +98,7 @@ class ProyectoTareaIntegrationTest(TestCase):
             "descripcion": "Descripción actualizada"
         }
         response_tarea = self.client.put(reverse("actualizar_tarea", kwargs={"pk": tarea.id}), tarea_data, format='json')
+        print(f'\nTest: test_actualizar_proyecto_y_tarea (Actualizar Tarea)\nResponse Data: {response_tarea.data}\nResponse Code: {response_tarea.status_code}')
         self.assertEqual(response_tarea.status_code, status.HTTP_200_OK)
 
     def test_eliminar_proyecto_y_tarea(self):
@@ -95,7 +107,8 @@ class ProyectoTareaIntegrationTest(TestCase):
             descripcion="Descripción del proyecto a eliminar", 
             fecha_inicio=date.today(), 
             fecha_fin=date.today(), 
-            creador=self.usuario_prueba
+            creador=self.usuario_prueba,
+            club=self.club  # Ensure the project is associated with the club
         )
         tarea = Tarea.objects.create(
             nombre="Tarea a eliminar", 
@@ -107,9 +120,11 @@ class ProyectoTareaIntegrationTest(TestCase):
 
         # Eliminar la tarea
         response_tarea = self.client.delete(reverse("eliminar_tarea", kwargs={"pk": tarea.id}))
+        print(f'\nTest: test_eliminar_proyecto_y_tarea (Eliminar Tarea)\nResponse Data: {response_tarea.data}\nResponse Code: {response_tarea.status_code}')
         self.assertEqual(response_tarea.status_code, status.HTTP_200_OK)
 
         # Eliminar el proyecto por su nombre
         nombre_proyecto = "Proyecto a eliminar"
         response_proyecto = self.client.delete(reverse("delete_proyecto"), data={"nombre": nombre_proyecto}, format='json')
+        print(f'\nTest: test_eliminar_proyecto_y_tarea (Eliminar Proyecto)\nResponse Data: {response_proyecto.data}\nResponse Code: {response_proyecto.status_code}')
         self.assertEqual(response_proyecto.status_code, status.HTTP_200_OK)
