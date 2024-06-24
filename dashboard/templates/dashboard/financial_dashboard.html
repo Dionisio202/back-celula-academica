@@ -59,12 +59,12 @@
                     label: 'Ingresos vs Egresos',
                     data: [{{ total_ingresos }}, {{ total_egresos }}],
                     backgroundColor: [
-                        'rgba(40, 180, 99, 0.2)', 
-                        'rgba(231, 76, 60, 0.2)',   
+                        'rgba(40, 180, 99, 0.2)', // Verde
+                        'rgba(231, 76, 60, 0.2)'   // Rojo
                     ],
                     borderColor: [
                         'rgba(40, 180, 99, 1)',
-                        'rgba(231, 76, 60, 1)',
+                        'rgba(231, 76, 60, 1)'
                     ],
                     borderWidth: 1
                 }]
@@ -80,6 +80,7 @@
             }
         });
     </script>
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
     <script>
         AOS.init();
 
