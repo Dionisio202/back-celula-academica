@@ -65,7 +65,7 @@ MIDDLEWARE = [
 ]
 CORS_ORIGIN_WHITELIST = [
     'http://localhost:3000',  
-
+    'https://front-celula-academica.vercel.app',
 ]
 ROOT_URLCONF = 'celula_academica.urls'
 BASE_DIR = Path(__file__).resolve().parent.parent
