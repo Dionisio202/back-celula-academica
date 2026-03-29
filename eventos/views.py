@@ -43,14 +43,15 @@ class CrearPonenteView(View):
 class InscribirseConcursoView(View):
     def get(self, request, concurso_id):
         concurso = Concurso.objects.get(id=concurso_id)
-        form = InscripcionConcursoForm()
+        form = InscripcionConcursoForm(initial={'concurso': concurso})
         return render(request, 'eventos/inscribirse_concurso.html', {'form': form, 'concurso': concurso})
 
     def post(self, request, concurso_id):
         concurso = Concurso.objects.get(id=concurso_id)
         form = InscripcionConcursoForm(request.POST)
         if form.is_valid():
-            inscripcion = form.save()
-            concurso.inscripciones.add(inscripcion)
+            inscripcion = form.save(commit=False)
+            inscripcion.concurso = concurso
+            inscripcion.save()
             return redirect('concurso_detalle', concurso_id=concurso.id)
         return render(request, 'eventos/inscribirse_concurso.html', {'form': form, 'concurso': concurso})

@@ -19,4 +19,4 @@ class PonenteSerializer(serializers.ModelSerializer):
 class InscripcionConcursoSerializer(serializers.ModelSerializer):
     class Meta:
         model = InscripcionConcurso
-        fields = ['id', 'cedula', 'nombre', 'apellido', 'telefono', 'correo', 'carrera', 'semestre', 'concurso']
+        fields = ['id', 'cedula', 'nombre', 'apellido', 'telefono', 'correo', 'carrera', 'semestre', 'concurso','nombre_grupo']

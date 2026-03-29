@@ -99,17 +99,39 @@ class PonenteRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView)
         self.perform_destroy(instance)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+
 class InscripcionConcursoListCreateAPIView(generics.ListCreateAPIView):
     queryset = InscripcionConcurso.objects.all()
     serializer_class = InscripcionConcursoSerializer
 
+    def perform_create(self, serializer):
+        concurso = serializer.validated_data.get('concurso')
+        nombre_grupo = serializer.validated_data.get('nombre_grupo')
+
+        if concurso.max_integrantes is not None:
+            if not nombre_grupo or any(char.isdigit() for char in nombre_grupo):
+                error_message = 'El nombre de grupo no puede contener números ni estar en blanco'
+                return Response({'error': error_message}, status=status.HTTP_404_NOT_FOUND)
+            else:
+                integrantes_actuales = concurso.inscripciones.filter(nombre_grupo=nombre_grupo).count()
+                if integrantes_actuales >= concurso.max_integrantes:
+                    error_message = 'Se ha alcanzado el número máximo de integrantes para ese nombre de grupo.'
+                    return Response({'error': error_message}, status=status.HTTP_404_NOT_FOUND)
+        elif nombre_grupo:
+            error_message = 'No puede ingresar un nombre de grupo si el concurso no permite grupos.'
+            return Response({'error': error_message}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer.save()
+
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
+        response = self.perform_create(serializer)
+        if isinstance(response, Response):
+            return response
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
-
+    
 class InscripcionConcursoRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
     queryset = InscripcionConcurso.objects.all()
     serializer_class = InscripcionConcursoSerializer

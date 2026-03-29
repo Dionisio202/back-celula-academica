@@ -18,4 +18,4 @@ class PonenteForm(forms.ModelForm):
 class InscripcionConcursoForm(forms.ModelForm):
     class Meta:
         model = InscripcionConcurso
-        fields = ['cedula', 'nombre', 'apellido', 'telefono', 'correo', 'carrera', 'semestre']
+        fields = ['cedula', 'nombre', 'apellido', 'telefono', 'correo', 'carrera', 'semestre', 'nombre_grupo']
