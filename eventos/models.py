@@ -1,5 +1,6 @@
 from django.db import models
 from django.core.validators import RegexValidator, MinValueValidator, MaxValueValidator
+from decimal import Decimal
 from django.core.exceptions import ValidationError
 
 class Ponente(models.Model):
@@ -42,7 +43,7 @@ class Concurso(Evento):
     valor_inscripcion = models.DecimalField(
         max_digits=10, 
         decimal_places=2,
-        validators=[MinValueValidator(0.0, "El valor de la inscripción no puede ser negativo.")]
+        validators=[MinValueValidator(Decimal(0.0), "El valor de la inscripción no puede ser negativo.")]
     )
 
     def __str__(self):
